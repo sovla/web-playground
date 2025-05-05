@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>송장 추적기</title>
+        <style>
+            body {
+                font-family: 'Noto Sans KR', sans-serif;
+                max-width: 100%;
+                margin: 0 auto;
+                padding: 20px;
+                background-color: #f5f5f5;
+                box-sizing: border-box;
+            }
+
+            h1 {
+                color: #333;
+                text-align: center;
+                margin-bottom: 20px;
+            }
+
+            .container {
+                background-color: white;
+                border-radius: 10px;
+                padding: 20px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            }
+
+            .input-group {
+                display: flex;
+                margin-bottom: 10px;
+            }
+
+            .input-group input {
+                flex: 1;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 5px 0 0 5px;
+            }
+
+            .input-group button {
+                padding: 10px 15px;
+                background-color: #FF8A3D;
+                color: white;
+                border: none;
+                border-radius: 0 5px 5px 0;
+                cursor: pointer;
+            }
+
+            .nickname-input {
+                margin-bottom: 20px;
+            }
+
+            .nickname-input input {
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                width: 100%;
+            }
+
+            .layout-selector {
+                display: flex;
+                justify-content: flex-end;
+                margin-bottom: 15px;
+                align-items: center;
+            }
+
+            .layout-selector label {
+                margin-right: 10px;
+            }
+
+            .layout-selector select {
+                padding: 5px;
+                border-radius: 4px;
+                border: 1px solid #ddd;
+            }
+
+            .tracking-list {
+                margin-bottom: 20px;
+            }
+
+            .tracking-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 10px;
+                border-bottom: 1px solid #eee;
+            }
+
+            .tracking-item:last-child {
+                border-bottom: none;
+            }
+
+            .tracking-item button {
+                background-color: #ff4d4d;
+                color: white;
+                border: none;
+                border-radius: 3px;
+                padding: 5px 10px;
+                cursor: pointer;
+                margin-left: 5px;
+            }
+
+            .view-invoice {
+                background-color: #4d9dff !important;
+            }
+
+            .tracking-grid {
+                display: grid;
+                grid-template-columns: repeat(1, 1fr);
+                gap: 15px;
+                margin-top: 20px;
+            }
+
+            .tracking-cell {
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                overflow: hidden;
+                position: relative;
+                min-height: 600px;
+            }
+
+            .tracking-cell-header {
+                padding: 8px;
+                background-color: #f0f0f0;
+                font-weight: bold;
+                text-align: center;
+                border-bottom: 1px solid #ddd;
+                display: flex;
+                justify-content: space-between;
+            }
+
+            .tracking-cell-header .item-nickname {
+                font-weight: bold;
+                color: #FF8A3D;
+            }
+
+            iframe {
+                width: 100%;
+                height: 100%;
+            }
+
+            .controls {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 15px;
+            }
+
+            .btn-group {
+                display: flex;
+            }
+
+            .btn-group button {
+                padding: 6px 12px;
+                background-color: #FF8A3D;
+                color: white;
+                border: none;
+                cursor: pointer;
+                margin-left: 5px;
+                border-radius: 4px;
+            }
+
+            .invoice-info {
+                display: flex;
+                align-items: center;
+            }
+
+            .invoice-checkbox {
+                margin-right: 10px;
+            }
+
+            .invoice-details {
+                margin-left: 5px;
+            }
+
+            .invoice-nickname {
+                font-weight: bold;
+                color: #FF8A3D;
+                margin-left: 5px;
+            }
+
+            .edit-nickname {
+                background-color: #6c757d !important;
+                font-size: 12px;
+                padding: 3px 6px !important;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="container">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+                <h1 style="margin-bottom:0;">송장 추적기</h1>
+                <button id="map-btn"
+                    style="background:#2DB400;color:white;border:none;border-radius:4px;padding:8px 18px;cursor:pointer;font-size:16px;">지도</button>
+            </div>
+            <div class="input-group">
+                <input type="text" id="invoice-input" placeholder="송장번호를 입력하세요">
+                <select id="courier-select" style="padding:10px;border:1px solid #ddd;border-radius:0;">
+                    <option value="gs">GS네트웍스</option>
+                    <option value="cj">CJ대한통운</option>
+                    <option value="hanjin">한진택배</option>
+                    <option value="lotte">롯데택배</option>
+                    <option value="epost">우체국</option>
+                </select>
+                <button id="add-invoice">추가</button>
+            </div>
+            <div class="nickname-input">
+                <input type="text" id="nickname-input" placeholder="상품 별명을 입력하세요 (선택사항)">
+            </div>
+            <div class="tracking-list" id="tracking-list">
+                <!-- 송장 목록이 여기에 추가됩니다 -->
+            </div>
+            <div class="controls">
+                <div class="layout-selector">
+                    <label for="grid-layout">그리드 레이아웃:</label>
+                    <select id="grid-layout">
+                        <option value="1x1">1 x 1</option>
+                        <option value="1x2">1 x 2</option>
+                        <option value="2x1">2 x 1</option>
+                        <option value="2x2">2 x 2</option>
+                        <option value="3x2">3 x 2</option>
+                        <option value="3x3">3 x 3</option>
+                    </select>
+                </div>
+                <div class="btn-group">
+                    <button id="view-selected">선택 항목 보기</button>
+                    <button id="view-all">모두 보기</button>
+                </div>
+            </div>
+            <div class="tracking-grid" id="multi-view">
+                <!-- 여기에 다중 iframe이 추가됩니다 -->
+            </div>
+        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const invoiceInput = document.getElementById('invoice-input');
+                const nicknameInput = document.getElementById('nickname-input');
+                const addInvoiceButton = document.getElementById('add-invoice');
+                const trackingList = document.getElementById('tracking-list');
+                const multiView = document.getElementById('multi-view');
+                const gridLayout = document.getElementById('grid-layout');
+                const viewSelectedBtn = document.getElementById('view-selected');
+                const viewAllBtn = document.getElementById('view-all');
+                const mapBtn = document.getElementById('map-btn');
+
+                // 로컬 스토리지에서 송장 정보 불러오기
+                let trackingItems = JSON.parse(localStorage.getItem('trackingItems')) || [];
+                let selectedInvoices = [];
+
+                // 그리드 레이아웃 변경 이벤트
+                gridLayout.addEventListener('change', function () {
+                    localStorage.setItem('gridLayout', gridLayout.value);
+                    updateGridLayout();
+                });
+
+                // 그리드 레이아웃 업데이트
+                function updateGridLayout() {
+                    const layout = gridLayout.value;
+                    const [rows, cols] = layout.split('x').map(Number);
+
+                    multiView.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+                    displaySelectedInvoices();
+                }
+
+                // 택배사별 url 생성 함수
+                function getCourierUrl(courier, invoiceNumber) {
+                    switch (courier) {
+                        case 'gs':
+                            return `https://www.cvsnet.co.kr/invoice/tracking.do?invoice_no=${invoiceNumber}`;
+                        case 'cj':
+                            return `https://www.cjlogistics.com/ko/tool/parcel/tracking?gnbInvcNo=${invoiceNumber}`;
+                        case 'hanjin':
+                            return `https://www.hanjin.co.kr/kor/CMS/DeliveryMgr/WaybillResult.do?mCode=MN038&wblnum=${invoiceNumber}`;
+                        case 'lotte':
+                            return `https://www.lotteglogis.com/open/tracking?InvNo=${invoiceNumber}`;
+                        case 'epost':
+                            return `https://service.epost.go.kr/trace.RetrieveDomRigiTraceList.comm?sid1=${invoiceNumber}`;
+                        default:
+                            return `https://www.cvsnet.co.kr/invoice/tracking.do?invoice_no=${invoiceNumber}`;
+                    }
+                }
+
+                // 기존 데이터 마이그레이션 (courier 없으면 gs로)
+                trackingItems.forEach(item => {
+                    if (!item.courier) item.courier = 'gs';
+                });
+                localStorage.setItem('trackingItems', JSON.stringify(trackingItems));
+
+                function createIframe(invoiceNumber, courier) {
+                    const iframe = document.createElement('iframe');
+                    iframe.src = getCourierUrl(courier, invoiceNumber);
+                    return iframe;
+                }
+
+                // 선택한 송장 표시
+                function displaySelectedInvoices() {
+                    multiView.innerHTML = '';
+
+                    // 선택된 항목이 없으면 모든 항목 표시
+                    const itemsToShow = selectedInvoices.length > 0
+                        ? trackingItems.filter(item => selectedInvoices.includes(item.invoiceNumber))
+                        : trackingItems;
+
+                    itemsToShow.forEach(item => {
+                        const cell = document.createElement('div');
+                        cell.className = 'tracking-cell';
+
+                        const header = document.createElement('div');
+                        header.className = 'tracking-cell-header';
+
+                        const headerContent = document.createElement('div');
+                        headerContent.innerHTML = `
+                            <span>송장번호: ${item.invoiceNumber}</span>
+                            <span style="margin-left:10px;color:#888;font-size:13px;">[${getCourierName(item.courier)}]</span>
+                            ${item.nickname ? `<span class="item-nickname">${item.nickname}</span>` : ''}
+                        `;
+
+                        header.appendChild(headerContent);
+                        const iframe = createIframe(item.invoiceNumber, item.courier);
+
+                        cell.appendChild(header);
+                        cell.appendChild(iframe);
+                        multiView.appendChild(cell);
+                    });
+                }
+
+                // 선택한 항목 보기 버튼 이벤트
+                viewSelectedBtn.addEventListener('click', function () {
+                    displaySelectedInvoices();
+                });
+
+                // 모두 보기 버튼 이벤트
+                viewAllBtn.addEventListener('click', function () {
+                    selectedInvoices = [];
+                    displaySelectedInvoices();
+
+                    // 체크박스 상태 초기화
+                    document.querySelectorAll('.invoice-checkbox').forEach(checkbox => {
+                        checkbox.checked = false;
+                    });
+                });
+
+                // 별명 수정 함수
+                function editNickname(index) {
+                    const item = trackingItems[index];
+                    const newNickname = prompt('별명을 입력하세요:', item.nickname || '');
+
+                    if (newNickname !== null) {
+                        trackingItems[index].nickname = newNickname;
+                        localStorage.setItem('trackingItems', JSON.stringify(trackingItems));
+                        renderInvoices();
+                        displaySelectedInvoices();
+                    }
+                }
+
+                // 송장 목록 렌더링
+                function renderInvoices() {
+                    trackingList.innerHTML = '';
+                    trackingItems.forEach((item, index) => {
+                        const listItem = document.createElement('div');
+                        listItem.className = 'tracking-item';
+
+                        const invoiceInfo = document.createElement('div');
+                        invoiceInfo.className = 'invoice-info';
+
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.className = 'invoice-checkbox';
+                        checkbox.setAttribute('data-invoice', item.invoiceNumber);
+
+                        const details = document.createElement('div');
+                        details.className = 'invoice-details';
+                        details.innerHTML = `
+                            <span class="invoice-number">${item.invoiceNumber}</span>
+                            ${item.nickname ? `<span class="invoice-nickname">(${item.nickname})</span>` : ''}
+                        `;
+
+                        invoiceInfo.appendChild(checkbox);
+                        invoiceInfo.appendChild(details);
+
+                        const actions = document.createElement('div');
+                        actions.className = 'actions';
+                        actions.innerHTML = `
+                            <button class="edit-nickname" data-index="${index}">별명</button>
+                            <button class="view-invoice" data-invoice="${item.invoiceNumber}">조회</button>
+                            <button class="delete-invoice" data-index="${index}">삭제</button>
+                        `;
+
+                        listItem.appendChild(invoiceInfo);
+                        listItem.appendChild(actions);
+                        trackingList.appendChild(listItem);
+                    });
+
+                    // 체크박스 이벤트 리스너 추가
+                    document.querySelectorAll('.invoice-checkbox').forEach(checkbox => {
+                        checkbox.addEventListener('change', function () {
+                            const invoiceNumber = this.getAttribute('data-invoice');
+                            if (this.checked) {
+                                if (!selectedInvoices.includes(invoiceNumber)) {
+                                    selectedInvoices.push(invoiceNumber);
+                                }
+                            } else {
+                                selectedInvoices = selectedInvoices.filter(inv => inv !== invoiceNumber);
+                            }
+                        });
+                    });
+
+                    // 별명 수정 버튼 이벤트 리스너 추가
+                    document.querySelectorAll('.edit-nickname').forEach(button => {
+                        button.addEventListener('click', function () {
+                            const index = parseInt(this.getAttribute('data-index'));
+                            editNickname(index);
+                        });
+                    });
+
+                    // 조회 버튼에 이벤트 리스너 추가
+                    document.querySelectorAll('.view-invoice').forEach(button => {
+                        button.addEventListener('click', function () {
+                            const invoiceNumber = this.getAttribute('data-invoice');
+
+                            // 해당 송장만 선택하여 표시
+                            selectedInvoices = [invoiceNumber];
+
+                            // 체크박스 상태 업데이트
+                            document.querySelectorAll('.invoice-checkbox').forEach(checkbox => {
+                                checkbox.checked = checkbox.getAttribute('data-invoice') === invoiceNumber;
+                            });
+
+                            displaySelectedInvoices();
+                        });
+                    });
+
+                    // 삭제 버튼에 이벤트 리스너 추가
+                    document.querySelectorAll('.delete-invoice').forEach(button => {
+                        button.addEventListener('click', function () {
+                            const index = parseInt(this.getAttribute('data-index'));
+                            const removedInvoice = trackingItems[index].invoiceNumber;
+
+                            // 송장 목록에서 제거
+                            trackingItems.splice(index, 1);
+                            localStorage.setItem('trackingItems', JSON.stringify(trackingItems));
+
+                            // 선택된 송장 목록에서도 제거
+                            selectedInvoices = selectedInvoices.filter(inv => inv !== removedInvoice);
+
+                            renderInvoices();
+                            displaySelectedInvoices();
+                        });
+                    });
+                }
+
+                // 송장 추가
+                addInvoiceButton.addEventListener('click', function () {
+                    const invoiceNumber = invoiceInput.value.trim();
+                    const nickname = nicknameInput.value.trim();
+                    const courier = document.getElementById('courier-select').value;
+
+                    // 운송장 번호가 비어있거나 null/undefined/공백일 경우 추가하지 않음
+                    if (!invoiceNumber || invoiceNumber === 'null' || invoiceNumber === 'undefined') {
+                        alert('운송장 번호를 올바르게 입력하세요.');
+                        return;
+                    }
+
+                    if (!trackingItems.some(item => item.invoiceNumber === invoiceNumber && item.courier === courier)) {
+                        trackingItems.push({
+                            invoiceNumber: invoiceNumber,
+                            nickname: nickname,
+                            courier: courier
+                        });
+
+                        localStorage.setItem('trackingItems', JSON.stringify(trackingItems));
+                        invoiceInput.value = '';
+                        nicknameInput.value = '';
+                        renderInvoices();
+
+                        // 새로 추가된 송장번호로 업데이트
+                        selectedInvoices = [invoiceNumber];
+
+                        // 체크박스 상태 업데이트
+                        document.querySelectorAll('.invoice-checkbox').forEach(checkbox => {
+                            checkbox.checked = checkbox.getAttribute('data-invoice') === invoiceNumber;
+                        });
+
+                        displaySelectedInvoices();
+                    }
+                });
+
+                // Enter 키로 송장 추가
+                invoiceInput.addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter') {
+                        addInvoiceButton.click();
+                    }
+                });
+
+                // 페이지 로드 시 송장 목록 렌더링
+                renderInvoices();
+
+                // 페이지 로드 시 gridLayout 값 복원 및 적용
+                const savedGrid = localStorage.getItem('gridLayout');
+                if (savedGrid) gridLayout.value = savedGrid;
+                updateGridLayout();
+
+                // 페이지 로드 시 모든 항목 표시
+                displaySelectedInvoices();
+
+                // 지도 버튼(상단) 기능
+                document.getElementById('map-btn').onclick = function () {
+                    // 선택된 송장 중 첫 번째
+                    let target = null;
+                    if (selectedInvoices.length > 0) {
+                        target = trackingItems.find(item => item.invoiceNumber === selectedInvoices[0]);
+                    } else if (trackingItems.length > 0) {
+                        target = trackingItems[0];
+                    }
+                    if (!target) {
+                        alert('지도로 검색할 송장을 선택하거나, 송장을 추가하세요.');
+                        return;
+                    }
+                    const keyword = target.nickname && target.nickname.trim() ? target.nickname : target.invoiceNumber;
+                    const url = `https://map.naver.com/v5/search/${encodeURIComponent(keyword)}`;
+                    window.open(url, '_blank', 'width=900,height=700');
+                };
+
+                // 택배사명 반환 함수
+                function getCourierName(code) {
+                    switch (code) {
+                        case 'gs': return 'GS네트웍스';
+                        case 'cj': return 'CJ대한통운';
+                        case 'hanjin': return '한진택배';
+                        case 'lotte': return '롯데택배';
+                        case 'epost': return '우체국';
+                        default: return 'GS네트웍스';
+                    }
+                }
+            });
+        </script>
+    </body>
+
+</html>
