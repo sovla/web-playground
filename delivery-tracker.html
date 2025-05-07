@@ -276,7 +276,7 @@
                         case 'hanjin':
                             return `https://www.hanjin.co.kr/kor/CMS/DeliveryMgr/WaybillResult.do?mCode=MN038&wblnum=${invoiceNumber}`;
                         case 'lotte':
-                            return `https://www.lotteglogis.com/open/tracking?InvNo=${invoiceNumber}`;
+                            return `http://newsimpact.cafe24.com/delivery/ifr_delivery_search.php?dtd_number_query=${invoiceNumber}&num=5`;
                         case 'epost':
                             return `https://service.epost.go.kr/trace.RetrieveDomRigiTraceList.comm?sid1=${invoiceNumber}`;
                         case "logen":
