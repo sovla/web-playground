@@ -270,7 +270,7 @@
                 function getCourierUrl(courier, invoiceNumber) {
                     switch (courier) {
                         case 'gs':
-                            return `https://www.cvsnet.co.kr/invoice/tracking.do?invoice_no=${invoiceNumber}`;
+                            return `https://www.cvsnet.co.kr/invoice/tracking.do?invoice_no=${invoiceNumber}#trackingItems`;
                         case 'cj':
                             return `https://www.cjlogistics.com/ko/tool/parcel/tracking?gnbInvcNo=${invoiceNumber}`;
                         case 'hanjin':
