@@ -204,6 +204,7 @@
                     <option value="hanjin">한진택배</option>
                     <option value="lotte">롯데택배</option>
                     <option value="epost">우체국</option>
+                    <option value="logen">로젠택배</option>
                 </select>
                 <button id="add-invoice">추가</button>
             </div>
@@ -269,7 +270,7 @@
                 function getCourierUrl(courier, invoiceNumber) {
                     switch (courier) {
                         case 'gs':
-                            return `https://www.cvsnet.co.kr/invoice/tracking.do?invoice_no=${invoiceNumber}#trackingItems`;
+                            return `https://www.cvsnet.co.kr/invoice/tracking.do?invoice_no=${invoiceNumber}`;
                         case 'cj':
                             return `https://www.cjlogistics.com/ko/tool/parcel/tracking?gnbInvcNo=${invoiceNumber}`;
                         case 'hanjin':
@@ -278,8 +279,10 @@
                             return `https://www.lotteglogis.com/open/tracking?InvNo=${invoiceNumber}`;
                         case 'epost':
                             return `https://service.epost.go.kr/trace.RetrieveDomRigiTraceList.comm?sid1=${invoiceNumber}`;
+                        case "logen":
+                            return `https://www.ilogen.com/m/personal/trace/${invoiceNumber}`;
                         default:
-                            return `https://www.cvsnet.co.kr/invoice/tracking.do?invoice_no=${invoiceNumber}#trackingItems`;
+                            return `https://www.cvsnet.co.kr/invoice/tracking.do?invoice_no=${invoiceNumber}`;
                     }
                 }
 
@@ -532,6 +535,7 @@
                         case 'hanjin': return '한진택배';
                         case 'lotte': return '롯데택배';
                         case 'epost': return '우체국';
+                        case "logen": return "로젠택배";
                         default: return 'GS네트웍스';
                     }
                 }
